@@ -84,7 +84,6 @@ import { usePlaybackSessionStore } from '../stores/playbackSession';
 import { normalizePlaybackEvent } from '../tracking/normalizePlaybackEvent';
 import {
   buildPlaybackEvent,
-  createPlayRequestEvent,
   createSkipEvent,
   usePlaybackTracker
 } from '../tracking/usePlaybackTracker';
@@ -197,15 +196,6 @@ const play = async () => {
   }
 
   const currentSnapshot = adapter.value.getSnapshot();
-  tracker.recordEvent(
-    createPlayRequestEvent(
-      trackingContext.value,
-      currentSnapshot.currentTime,
-      currentSnapshot.duration,
-      currentSnapshot.bufferedRanges
-    )
-  );
-
   try {
     await adapter.value.play();
     updateSnapshot();

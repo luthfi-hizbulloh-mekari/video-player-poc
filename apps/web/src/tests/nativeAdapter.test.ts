@@ -42,4 +42,22 @@ describe('createNativePlayer', () => {
       })
     );
   });
+
+  it('emits play_request when playback starts from the video element', async () => {
+    const container = document.createElement('div');
+    const onEvent = vi.fn();
+
+    createNativePlayer({ container, onEvent });
+    const video = container.querySelector('video');
+
+    expect(video).not.toBeNull();
+
+    video?.dispatchEvent(new Event('play'));
+
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'play_request'
+      })
+    );
+  });
 });

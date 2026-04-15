@@ -1,6 +1,7 @@
 import type { BufferedRange, DeliveryType } from 'shared';
 
 export type PlayerAdapterEventType =
+  | 'play_request'
   | 'playing'
   | 'pause'
   | 'seek_start'

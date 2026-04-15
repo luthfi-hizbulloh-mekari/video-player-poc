@@ -66,6 +66,15 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
   };
 
   video.addEventListener(
+    'play',
+    () => {
+      lastKnownTime = video.currentTime;
+      emit({ type: 'play_request' });
+    },
+    { signal: listeners.signal }
+  );
+
+  video.addEventListener(
     'playing',
     () => {
       if (isBuffering) {

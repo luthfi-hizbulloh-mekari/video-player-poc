@@ -91,6 +91,11 @@ export function createVideoJsPlayer({ container, onEvent }: PlayerAdapterOptions
   };
 
   const bindEvents = (instance: VideoJsPlayer) => {
+    instance.on('play', () => {
+      lastKnownTime = getCurrentTime(instance);
+      emit({ type: 'play_request' });
+    });
+
     instance.on('playing', () => {
       if (isBuffering) {
         emit({ type: 'buffer_end' });

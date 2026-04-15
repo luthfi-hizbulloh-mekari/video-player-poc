@@ -149,6 +149,11 @@ export function createPlyrPlayer({ container, onEvent }: PlayerAdapterOptions): 
   };
 
   const bindEvents = (instance: Plyr) => {
+    instance.on('play', () => {
+      lastKnownTime = toFiniteNumber(instance.currentTime) ?? lastKnownTime;
+      emit({ type: 'play_request' });
+    });
+
     instance.on('playing', () => {
       if (isBuffering) {
         emit({ type: 'buffer_end' });
