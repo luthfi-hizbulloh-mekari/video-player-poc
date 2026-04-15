@@ -21,14 +21,14 @@ const sampleFixture = {
   },
 };
 
-const youtubeFixture = {
-  id: "youtube-sample",
-  label: "YouTube sample",
-  description: "Remote fixture",
+const mp4OnlyFixture = {
+  id: "mp4-only",
+  label: "MP4 only",
+  description: "Single-format fixture",
   sources: {
-    youtube: {
-      url: "https://www.youtube.com/watch?v=9qkpcLK422o",
-      relativePath: "9qkpcLK422o",
+    mp4: {
+      url: "/media/mp4/other.mp4",
+      relativePath: "mp4/other.mp4",
       available: true,
     },
   },
@@ -43,24 +43,22 @@ describe("playbackSession store", () => {
     const store = usePlaybackSessionStore();
 
     store.setManifest(
-      [sampleFixture, youtubeFixture],
+      [sampleFixture, mp4OnlyFixture],
       "2026-04-15T10:00:00.000Z",
     );
     store.setSelectedDeliveryType("hls");
-    store.setSelectedMediaId("youtube-sample");
+    store.setSelectedMediaId("mp4-only");
 
-    expect(store.selectedDeliveryType).toBe("youtube");
-    expect(store.selectedSource?.url).toBe(
-      "https://www.youtube.com/watch?v=9qkpcLK422o",
-    );
+    expect(store.selectedDeliveryType).toBe("mp4");
+    expect(store.selectedSource?.url).toBe("/media/mp4/other.mp4");
   });
 
   it("returns null when the requested delivery is missing from the fixture", () => {
     const store = usePlaybackSessionStore();
 
-    store.fixtures = [youtubeFixture];
-    store.selectedMediaId = "youtube-sample";
-    store.selectedDeliveryType = "mp4";
+    store.fixtures = [mp4OnlyFixture];
+    store.selectedMediaId = "mp4-only";
+    store.selectedDeliveryType = "hls";
 
     expect(store.selectedSource).toBeNull();
   });

@@ -52,12 +52,6 @@
       <p class="panel__subtle" v-if="selectedSource">
         Source URL: <code>{{ selectedSource.url }}</code>
       </p>
-      <p
-        v-if="store.selectedMediaId === 'youtube-sample' && store.selectedPlayerType !== 'plyr'"
-        class="panel__subtle"
-      >
-        Use the Plyr lane for YouTube playback.
-      </p>
       <p class="panel__subtle" v-if="selectedSource && !selectedSource.available">
         Fixtures are missing in <code>media/output</code>. Generate them locally once
         <code>ffmpeg</code> is installed.

@@ -60,16 +60,6 @@ describe("media manifest and static media routes", () => {
             },
           },
         },
-        {
-          id: "youtube-sample",
-          sources: {
-            youtube: {
-              url: "https://www.youtube.com/watch?v=9qkpcLK422o",
-              relativePath: "9qkpcLK422o",
-              available: true,
-            },
-          },
-        },
       ],
     });
   });

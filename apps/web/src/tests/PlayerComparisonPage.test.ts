@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePlaybackSessionStore } from "../stores/playbackSession";
@@ -43,18 +43,6 @@ describe("PlayerComparisonPage", () => {
                 },
               },
             },
-            {
-              id: "youtube-sample",
-              label: "YouTube sample",
-              description: "Remote fixture",
-              sources: {
-                youtube: {
-                  url: "https://www.youtube.com/watch?v=9qkpcLK422o",
-                  relativePath: "9qkpcLK422o",
-                  available: true,
-                },
-              },
-            },
           ],
           generatedAt: "2026-04-15T10:00:00.000Z",
         }),
@@ -62,7 +50,7 @@ describe("PlayerComparisonPage", () => {
     );
   });
 
-  it("loads the manifest, switches delivery lanes, and falls back to youtube when needed", async () => {
+  it("loads the manifest, switches delivery lanes, and records playback events", async () => {
     const { default: PlayerComparisonPage } =
       await import("../pages/PlayerComparisonPage.vue");
     const wrapper = mount(PlayerComparisonPage, {
@@ -76,20 +64,19 @@ describe("PlayerComparisonPage", () => {
       },
     });
 
-    await Promise.resolve();
+    await flushPromises();
     await wrapper.vm.$nextTick();
 
     const selects = wrapper.findAll("select");
     await selects[1]?.setValue("hls");
-    await selects[2]?.setValue("youtube-sample");
 
     const store = usePlaybackSessionStore();
     store.addEvent({
       eventType: "play_request",
       sessionId: store.sessionId,
-      mediaId: "youtube-sample",
+      mediaId: "sample",
       playerType: "native",
-      deliveryType: "youtube",
+      deliveryType: "hls",
       currentTime: 0,
       fromTime: null,
       toTime: null,
@@ -101,9 +88,8 @@ describe("PlayerComparisonPage", () => {
     });
     await wrapper.vm.$nextTick();
 
-    expect(store.selectedDeliveryType).toBe("youtube");
+    expect(store.selectedDeliveryType).toBe("hls");
     expect(wrapper.text()).toContain("play_request");
-    expect(wrapper.text()).toContain("Use the Plyr lane for YouTube playback.");
     expect(wrapper.find('[data-test="player-panel"]').exists()).toBe(true);
   });
 });

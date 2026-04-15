@@ -21,7 +21,6 @@ type MediaFixture = {
   sources: {
     mp4?: FixtureSource;
     hls?: FixtureSource;
-    youtube?: FixtureSource;
   };
 };
 
@@ -32,12 +31,6 @@ const fixtureSpecs = [
     description: "Synthetic fixture generated from scripts/generate-media.sh.",
     mp4RelativePath: "mp4/sample.mp4",
     hlsRelativePath: "hls/sample/master.m3u8",
-  },
-  {
-    id: "youtube-sample",
-    label: "YouTube sample (9qkpcLK422o)",
-    description: "Remote YouTube source - playable in Plyr lane only.",
-    youtubeVideoId: "9qkpcLK422o",
   },
 ] as const;
 
@@ -62,14 +55,6 @@ export function getMediaFixtures(): MediaFixture[] {
         available: existsSync(
           resolve(mediaOutputRoot, fixture.hlsRelativePath),
         ),
-      };
-    }
-
-    if ("youtubeVideoId" in fixture) {
-      sources.youtube = {
-        url: `https://www.youtube.com/watch?v=${fixture.youtubeVideoId}`,
-        relativePath: fixture.youtubeVideoId,
-        available: true,
       };
     }
 
