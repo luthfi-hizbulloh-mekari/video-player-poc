@@ -16,6 +16,10 @@ export const staticMediaPlugin: FastifyPluginAsync = async (app) => {
       if (filePath.endsWith('.ts')) {
         response.setHeader('content-type', 'video/mp2t');
       }
+
+      if (filePath.endsWith('.m4s')) {
+        response.setHeader('content-type', 'video/iso.segment');
+      }
     }
   });
 };
