@@ -13,6 +13,7 @@ export type MediaFixture = {
   sources: {
     mp4?: ManifestSource;
     hls?: ManifestSource;
+    mux?: ManifestSource;
     youtube?: ManifestSource;
   };
 };
@@ -32,7 +33,7 @@ export type MediaManifestResponse = {
   generatedAt: string;
 };
 
-const deliveryTypeOrder: DeliveryType[] = ['mp4', 'hls', 'youtube'];
+const deliveryTypeOrder: DeliveryType[] = ['mp4', 'hls', 'mux', 'youtube'];
 
 export async function fetchMediaManifest(): Promise<MediaManifestResponse> {
   const response = await fetch('/api/media/manifest');

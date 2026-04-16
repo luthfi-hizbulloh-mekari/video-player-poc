@@ -72,6 +72,10 @@ function extractYouTubeId(url: string) {
   );
 }
 
+function isHlsLikeDelivery(deliveryType: PlayerSource['deliveryType']) {
+  return deliveryType === 'hls' || deliveryType === 'mux';
+}
+
 export function createPlyrPlayer({ container, onEvent }: PlayerAdapterOptions): PlayerAdapter {
   let hls: Hls | null = null;
   let player: Plyr | null = null;
@@ -290,7 +294,7 @@ export function createPlyrPlayer({ container, onEvent }: PlayerAdapterOptions): 
       const video = createHtml5Root();
       createPlayer(video);
 
-      if (source.deliveryType === 'hls') {
+      if (isHlsLikeDelivery(source.deliveryType)) {
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = source.url;
         } else if (Hls.isSupported()) {

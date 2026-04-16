@@ -21,24 +21,35 @@ type MediaFixture = {
   sources: {
     mp4?: FixtureSource;
     hls?: FixtureSource;
+    mux?: FixtureSource;
   };
 };
 
-const fixtureSpecs = [
+type FixtureSpec = {
+  id: string;
+  label: string;
+  description: string;
+  mp4RelativePath?: string;
+  hlsRelativePath?: string;
+  muxPlaybackId?: string;
+};
+
+const fixtureSpecs: FixtureSpec[] = [
   {
     id: "sample",
     label: "Sample clip",
     description: "Synthetic fixture generated from scripts/generate-media.sh.",
     mp4RelativePath: "mp4/sample.mp4",
     hlsRelativePath: "hls/sample/master.m3u8",
+    muxPlaybackId: "wZuyI8vwgDB9dkKmx1OpO574uA7YJO7NA3A8Mz66lZU",
   },
-] as const;
+];
 
 export function getMediaFixtures(): MediaFixture[] {
   return fixtureSpecs.map((fixture) => {
     const sources: MediaFixture["sources"] = {};
 
-    if ("mp4RelativePath" in fixture) {
+    if (fixture.mp4RelativePath) {
       sources.mp4 = {
         url: `/media/${fixture.mp4RelativePath}`,
         relativePath: fixture.mp4RelativePath,
@@ -48,13 +59,21 @@ export function getMediaFixtures(): MediaFixture[] {
       };
     }
 
-    if ("hlsRelativePath" in fixture) {
+    if (fixture.hlsRelativePath) {
       sources.hls = {
         url: `/media/${fixture.hlsRelativePath}`,
         relativePath: fixture.hlsRelativePath,
         available: existsSync(
           resolve(mediaOutputRoot, fixture.hlsRelativePath),
         ),
+      };
+    }
+
+    if (fixture.muxPlaybackId) {
+      sources.mux = {
+        url: `https://stream.mux.com/${fixture.muxPlaybackId}.m3u8`,
+        relativePath: fixture.muxPlaybackId,
+        available: true,
       };
     }
 

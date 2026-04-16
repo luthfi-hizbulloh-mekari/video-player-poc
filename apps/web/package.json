@@ -10,6 +10,7 @@
     "lint": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@mux/mux-player": "^3.6.0",
     "hls.js": "^1.6.13",
     "pinia": "^3.0.3",
     "plyr": "^3.8.4",

@@ -1,4 +1,4 @@
-import Hls from 'hls.js';
+import '@mux/mux-player';
 import type { BufferedRange } from 'shared';
 
 import type {
@@ -9,6 +9,18 @@ import type {
   PlayerSource,
   SeekIntent
 } from '../types';
+
+type MuxPlayerElement = HTMLElement & {
+  buffered: TimeRanges;
+  currentTime: number;
+  duration: number;
+  ended: boolean;
+  error?: { message?: string | null } | null;
+  paused: boolean;
+  play: () => Promise<void>;
+  pause: () => void;
+  load?: () => void;
+};
 
 function toBufferedRanges(buffered: TimeRanges): BufferedRange[] {
   return Array.from({ length: buffered.length }, (_, index) => ({
@@ -21,32 +33,31 @@ function toFiniteNumber(value: number) {
   return Number.isFinite(value) ? value : null;
 }
 
-function isHlsLikeDelivery(deliveryType: PlayerSource['deliveryType']) {
-  return deliveryType === 'hls' || deliveryType === 'mux';
+function getErrorMessage(player: MuxPlayerElement) {
+  return player.error?.message ?? 'Mux player error';
 }
 
-export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions): PlayerAdapter {
-  const video = document.createElement('video');
+export function createMuxPlayer({ container, onEvent }: PlayerAdapterOptions): PlayerAdapter {
+  const player = document.createElement('mux-player') as MuxPlayerElement;
   const listeners = new AbortController();
-  let hls: Hls | null = null;
   let isBuffering = false;
   let suppressSeekPair = false;
   let pendingSeekFrom: number | null = null;
   let lastKnownTime = 0;
   let errorMessage: string | null = null;
 
-  video.controls = true;
-  video.preload = 'metadata';
-  video.crossOrigin = 'anonymous';
-  video.playsInline = true;
-  video.className = 'player-panel__video';
-  container.replaceChildren(video);
+  player.className = 'player-panel__video';
+  player.setAttribute('controls', '');
+  player.setAttribute('crossorigin', 'anonymous');
+  player.setAttribute('playsinline', '');
+  player.setAttribute('stream-type', 'on-demand');
+  container.replaceChildren(player);
 
   const snapshot = (): PlayerSnapshot => ({
-    currentTime: toFiniteNumber(video.currentTime),
-    duration: toFiniteNumber(video.duration),
-    paused: video.paused,
-    bufferedRanges: toBufferedRanges(video.buffered),
+    currentTime: toFiniteNumber(player.currentTime),
+    duration: toFiniteNumber(player.duration),
+    paused: player.paused,
+    bufferedRanges: toBufferedRanges(player.buffered),
     errorMessage
   });
 
@@ -64,21 +75,16 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
     });
   };
 
-  const destroyHls = () => {
-    hls?.destroy();
-    hls = null;
-  };
-
-  video.addEventListener(
+  player.addEventListener(
     'play',
     () => {
-      lastKnownTime = video.currentTime;
+      lastKnownTime = player.currentTime;
       emit({ type: 'play_request' });
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'playing',
     () => {
       if (isBuffering) {
@@ -86,25 +92,25 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
         isBuffering = false;
       }
 
-      lastKnownTime = video.currentTime;
+      lastKnownTime = player.currentTime;
       emit({ type: 'playing' });
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'pause',
     () => {
-      lastKnownTime = video.currentTime;
+      lastKnownTime = player.currentTime;
 
-      if (!video.ended) {
+      if (!player.ended) {
         emit({ type: 'pause' });
       }
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'waiting',
     () => {
       if (!isBuffering) {
@@ -115,7 +121,7 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'seeking',
     () => {
       if (suppressSeekPair) {
@@ -126,14 +132,14 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
       emit({
         type: 'seek_start',
         fromTime,
-        toTime: video.currentTime,
-        deltaSeconds: video.currentTime - fromTime
+        toTime: player.currentTime,
+        deltaSeconds: player.currentTime - fromTime
       });
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'seeked',
     () => {
       const fromTime = pendingSeekFrom ?? lastKnownTime;
@@ -141,31 +147,31 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
       if (suppressSeekPair) {
         suppressSeekPair = false;
         pendingSeekFrom = null;
-        lastKnownTime = video.currentTime;
+        lastKnownTime = player.currentTime;
         return;
       }
 
       emit({
         type: 'seek_end',
         fromTime,
-        toTime: video.currentTime,
-        deltaSeconds: video.currentTime - fromTime
+        toTime: player.currentTime,
+        deltaSeconds: player.currentTime - fromTime
       });
       pendingSeekFrom = null;
-      lastKnownTime = video.currentTime;
+      lastKnownTime = player.currentTime;
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'timeupdate',
     () => {
-      lastKnownTime = video.currentTime;
+      lastKnownTime = player.currentTime;
     },
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'ended',
     () => {
       emit({ type: 'ended' });
@@ -173,10 +179,10 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
     { signal: listeners.signal }
   );
 
-  video.addEventListener(
+  player.addEventListener(
     'error',
     () => {
-      errorMessage = video.error?.message ?? 'Native player error';
+      errorMessage = getErrorMessage(player);
       emit({
         type: 'error',
         errorMessage
@@ -185,58 +191,24 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
     { signal: listeners.signal }
   );
 
-  const load = async (source: PlayerSource) => {
-    destroyHls();
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-    errorMessage = null;
-    isBuffering = false;
-    pendingSeekFrom = null;
-    suppressSeekPair = false;
+  const resetPlayer = () => {
+    player.pause();
+    player.removeAttribute('playback-id');
+    player.removeAttribute('src');
+    player.load?.();
+  };
 
-    if (!source.available) {
-      errorMessage = 'Selected media is not available yet. Generate fixtures first.';
-      emit({
-        type: 'error',
-        errorMessage,
-        bufferedRanges: [],
-        currentTime: 0,
-        duration: null
-      });
-      return;
-    }
+  return {
+    async load(source) {
+      resetPlayer();
+      errorMessage = null;
+      isBuffering = false;
+      pendingSeekFrom = null;
+      suppressSeekPair = false;
+      lastKnownTime = 0;
 
-    if (source.deliveryType === 'youtube') {
-      errorMessage = 'This lane does not support YouTube sources. Switch to the Plyr lane.';
-      emit({
-        type: 'error',
-        errorMessage,
-        bufferedRanges: [],
-        currentTime: 0,
-        duration: null
-      });
-      return;
-    }
-
-    if (isHlsLikeDelivery(source.deliveryType)) {
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = source.url;
-      } else if (Hls.isSupported()) {
-        hls = new Hls();
-        hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) {
-            errorMessage = data.details || 'hls.js fatal error';
-            emit({
-              type: 'error',
-              errorMessage
-            });
-          }
-        });
-        hls.loadSource(source.url);
-        hls.attachMedia(video);
-      } else {
-        errorMessage = 'This browser does not support HLS in the native lane.';
+      if (!source.available) {
+        errorMessage = 'Selected media is not available yet. Generate fixtures first.';
         emit({
           type: 'error',
           errorMessage,
@@ -246,34 +218,39 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
         });
         return;
       }
-    } else {
-      video.src = source.url;
-    }
 
-    video.load();
-  };
+      if (source.deliveryType !== 'mux') {
+        errorMessage = 'The Mux lane only supports Mux delivery.';
+        emit({
+          type: 'error',
+          errorMessage,
+          bufferedRanges: [],
+          currentTime: 0,
+          duration: null
+        });
+        return;
+      }
 
-  return {
-    async load(source) {
-      await load(source);
+      player.setAttribute('playback-id', source.relativePath);
+      player.load?.();
     },
     async play() {
-      await video.play();
+      await player.play();
     },
     pause() {
-      video.pause();
+      player.pause();
     },
     seekTo(nextTime: number, intent: SeekIntent) {
-      const duration = Number.isFinite(video.duration) ? video.duration : nextTime;
+      const duration = Number.isFinite(player.duration) ? player.duration : nextTime;
       const clampedTarget = Math.max(0, Math.min(nextTime, duration));
 
-      pendingSeekFrom = toFiniteNumber(video.currentTime) ?? lastKnownTime;
+      pendingSeekFrom = toFiniteNumber(player.currentTime) ?? lastKnownTime;
 
       if (intent !== 'seek') {
         suppressSeekPair = true;
       }
 
-      video.currentTime = clampedTarget;
+      player.currentTime = clampedTarget;
       lastKnownTime = clampedTarget;
     },
     getSnapshot() {
@@ -281,8 +258,7 @@ export function createNativePlayer({ container, onEvent }: PlayerAdapterOptions)
     },
     destroy() {
       listeners.abort();
-      destroyHls();
-      video.pause();
+      resetPlayer();
       container.replaceChildren();
     }
   };

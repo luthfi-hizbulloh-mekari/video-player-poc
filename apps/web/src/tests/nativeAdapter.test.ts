@@ -33,6 +33,7 @@ describe('createNativePlayer', () => {
       mediaId: 'sample',
       deliveryType: 'mp4',
       url: '/media/mp4/sample.mp4',
+      relativePath: 'mp4/sample.mp4',
       available: false
     });
 

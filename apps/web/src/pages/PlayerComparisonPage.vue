@@ -2,10 +2,10 @@
   <main class="page-shell">
     <section class="hero">
       <p class="eyebrow">Video playback comparison</p>
-      <h1>Native video vs Video.js vs Plyr</h1>
+      <h1>Native video vs Video.js vs Plyr vs Mux</h1>
       <p class="hero__copy">
-        Compare MP4 and HLS playback while capturing a normalized event stream for play, pause,
-        seek, skip, buffering, and end-of-session states.
+        Compare MP4, HLS, and Mux playback while capturing a normalized event stream for play,
+        pause, seek, skip, buffering, and end-of-session states.
       </p>
     </section>
 
@@ -24,6 +24,7 @@
         <label>
           <span>Lane</span>
           <select :value="store.selectedPlayerType" @change="onPlayerChange">
+            <option value="mux">mux</option>
             <option value="native">native</option>
             <option value="videojs">videojs</option>
             <option value="plyr">plyr</option>

@@ -20,7 +20,10 @@
       </p>
 
       <p
-        v-if="(playerType === 'native' || playerType === 'plyr') && source.deliveryType === 'hls'"
+        v-if="
+          (playerType === 'native' || playerType === 'plyr') &&
+          (source.deliveryType === 'hls' || source.deliveryType === 'mux')
+        "
         class="panel__subtle"
       >
         Safari uses native HLS. Other browsers use <code>hls.js</code> in this lane.
@@ -76,6 +79,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { PlayerType } from 'shared';
 
 import type { MediaSourceDefinition } from '../lib/mediaSources';
+import { createMuxPlayer } from '../players/mux/createMuxPlayer';
 import { createNativePlayer } from '../players/native/createNativePlayer';
 import { createPlyrPlayer } from '../players/plyr/createPlyrPlayer';
 import type { PlayerAdapter, PlayerAdapterEvent, PlayerSnapshot } from '../players/types';
@@ -162,6 +166,8 @@ const createAdapter = () => {
   };
 
   switch (props.playerType) {
+    case 'mux':
+      return createMuxPlayer(options);
     case 'native':
       return createNativePlayer(options);
     case 'plyr':
@@ -185,6 +191,7 @@ const mountPlayer = async () => {
     mediaId: props.source.mediaId,
     deliveryType: props.source.deliveryType,
     url: props.source.url,
+    relativePath: props.source.relativePath,
     available: props.source.available
   });
   updateSnapshot();

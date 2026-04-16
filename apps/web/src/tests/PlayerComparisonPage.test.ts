@@ -41,6 +41,11 @@ describe("PlayerComparisonPage", () => {
                   relativePath: "hls/sample/master.m3u8",
                   available: true,
                 },
+                mux: {
+                  url: "https://stream.mux.com/wZuyI8vwgDB9dkKmx1OpO574uA7YJO7NA3A8Mz66lZU.m3u8",
+                  relativePath: "wZuyI8vwgDB9dkKmx1OpO574uA7YJO7NA3A8Mz66lZU",
+                  available: true,
+                },
               },
             },
           ],
@@ -68,15 +73,16 @@ describe("PlayerComparisonPage", () => {
     await wrapper.vm.$nextTick();
 
     const selects = wrapper.findAll("select");
-    await selects[1]?.setValue("hls");
+    await selects[0]?.setValue("mux");
+    await selects[1]?.setValue("mux");
 
     const store = usePlaybackSessionStore();
     store.addEvent({
       eventType: "play_request",
       sessionId: store.sessionId,
       mediaId: "sample",
-      playerType: "native",
-      deliveryType: "hls",
+      playerType: "mux",
+      deliveryType: "mux",
       currentTime: 0,
       fromTime: null,
       toTime: null,
@@ -88,7 +94,8 @@ describe("PlayerComparisonPage", () => {
     });
     await wrapper.vm.$nextTick();
 
-    expect(store.selectedDeliveryType).toBe("hls");
+    expect(store.selectedPlayerType).toBe("mux");
+    expect(store.selectedDeliveryType).toBe("mux");
     expect(wrapper.text()).toContain("play_request");
     expect(wrapper.find('[data-test="player-panel"]').exists()).toBe(true);
   });

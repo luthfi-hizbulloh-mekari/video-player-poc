@@ -29,8 +29,12 @@ function getDuration(player: ReturnType<typeof videojs>) {
   return player.duration() ?? null;
 }
 
+function isHlsLikeDelivery(deliveryType: PlayerSource['deliveryType']) {
+  return deliveryType === 'hls' || deliveryType === 'mux';
+}
+
 function sourceMimeType(source: PlayerSource) {
-  return source.deliveryType === 'hls' ? 'application/x-mpegURL' : 'video/mp4';
+  return isHlsLikeDelivery(source.deliveryType) ? 'application/x-mpegURL' : 'video/mp4';
 }
 
 export function createVideoJsPlayer({ container, onEvent }: PlayerAdapterOptions): PlayerAdapter {

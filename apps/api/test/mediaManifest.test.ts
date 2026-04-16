@@ -43,9 +43,10 @@ describe("media manifest and static media routes", () => {
       method: "GET",
       url: "/api/media/manifest",
     });
+    const payload = response.json();
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
+    expect(payload).toMatchObject({
       fixtures: [
         {
           id: "sample",
@@ -61,6 +62,10 @@ describe("media manifest and static media routes", () => {
           },
         },
       ],
+    });
+    expect(payload.fixtures[0]?.sources.mux).toMatchObject({
+      url: "https://stream.mux.com/wZuyI8vwgDB9dkKmx1OpO574uA7YJO7NA3A8Mz66lZU.m3u8",
+      available: true,
     });
   });
 

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-export const playerTypeSchema = z.enum(['native', 'videojs', 'plyr']);
+export const playerTypeSchema = z.enum(['native', 'videojs', 'plyr', 'mux']);
 export type PlayerType = z.infer<typeof playerTypeSchema>;
 
-export const deliveryTypeSchema = z.enum(['mp4', 'hls', 'youtube']);
+export const deliveryTypeSchema = z.enum(['mp4', 'hls', 'youtube', 'mux']);
 export type DeliveryType = z.infer<typeof deliveryTypeSchema>;
 
 export const playbackEventTypeSchema = z.enum([

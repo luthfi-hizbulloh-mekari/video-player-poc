@@ -36,6 +36,7 @@ export type PlayerSource = {
   mediaId: string;
   deliveryType: DeliveryType;
   url: string;
+  relativePath: string;
   available: boolean;
 };
 
